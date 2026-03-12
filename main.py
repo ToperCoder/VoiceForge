@@ -46,8 +46,9 @@ def main():
         print("No supported files found.")
         sys.exit(0)
         
-    os.makedirs(config.RAW_TEXT_DIR, exist_ok=True)
-    os.makedirs(config.FINAL_TEXT_DIR, exist_ok=True)
+    config.RAW_TEXT_DIR.mkdir(parents=True, exist_ok=True)
+    config.FINAL_TEXT_DIR.mkdir(parents=True, exist_ok=True)
+
     
     processed_files = [] # Список кортежей (имя_файла, имя_без_расширения)
     

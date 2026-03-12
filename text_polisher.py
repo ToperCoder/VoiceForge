@@ -12,10 +12,10 @@ def load_qwen():
     """
     Загружает модель Qwen через llama_cpp.
     """
-    print(f"⏳ Проверка пути: {config.QWEN_MODEL_PATH}")
-    if not os.path.exists(config.QWEN_MODEL_PATH):
+    if not config.QWEN_MODEL_PATH.exists():
         print(f"❌ ОШИБКА: Файл не найден!")
         sys.exit(1)
+
         
     n_gpu = -1 if config.USE_GPU else 0
     
