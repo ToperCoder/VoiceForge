@@ -1,0 +1,46 @@
+# Byte-compiled / optimized / DLL files
+__pycache__/
+*.py[cod]
+*$py.class
+
+# Virtual environment
+venv/
+env/
+.venv/
+
+# Jupyter / IPython
+.ipynb_checkpoints
+
+# Distribution / packaging
+build/
+dist/
+*.egg-info/
+
+# PyTorch / models
+*.pt
+*.pth
+*.gguf
+*.bin
+
+# Audio / output folders
+raw_text/
+final_text/
+audio_output/
+
+# Logs
+*.log
+
+# IDE / editor
+.vscode/
+.idea/
+
+# Models and large files
+models/
+*.mp4
+*.mkv
+*.avi
+*.mov
+*.mp3
+*.wav
+*.flac
+*.m4a

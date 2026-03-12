@@ -1,0 +1,6 @@
+faster-whisper
+llama-cpp-python
+huggingface_hub
+imageio-ffmpeg
+nvidia-cublas-cu12
+nvidia-cudnn-cu12
