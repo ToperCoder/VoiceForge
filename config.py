@@ -1,5 +1,6 @@
 import os
 
+WHISPER_REPO_ID = "deepdml/faster-whisper-large-v3-turbo-ct2"
 WHISPER_MODEL = os.path.join("models", "models--faster-whisper-large-v3-turbo-ct2")
 WHISPER_COMPUTE = "float16" 
 LANGUAGE = "az"

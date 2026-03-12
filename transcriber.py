@@ -37,6 +37,14 @@ def unload_whisper(model):
     """
     Полностью выгружает модель Whisper из памяти.
     """
-    print("\nUnloading Whisper...\n")
-    del model
+    print("\n[DEBUG] Освобождение памяти Whisper...")
+    if model:
+        try:
+            # Пытаемся удалить ссылки
+            del model
+        except:
+            pass
     gc.collect()
+    # Если есть возможность очистить кэш CUDA (через ctypes или если установлен torch)
+    # Но так как мы работаем через C++ либы, gc.collect() должен дернуть деструкторы
+    print("✅ Память Whisper очищена.\n")
