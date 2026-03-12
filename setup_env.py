@@ -31,21 +31,11 @@ def main():
     # 2. Upgrade pip
     run_cmd([python_exe, "-m", "pip", "install", "--upgrade", "pip"], "Upgrading pip")
 
-    # 3. Install llama-cpp-python
-    # Try local wheel first if Python version matches (3.12)
-    wheel_file = "llama_cpp_python-0.3.16+cuda12.1.sm86.ampere-cp312-cp312-win_amd64.whl"
-    if os.path.exists(wheel_file):
-        print(f"Checking compatibility for local wheel: {wheel_file}")
-        # Note: In a real script we'd check sys.version_info
-        # For now, we attempt installation and fallback if it fails or version mismatch is clear
-        try:
-            run_cmd([pip_exe, "install", wheel_file], "Installing local llama-cpp-python wheel")
-            print("✅ Local wheel installed successfully.")
-        except SystemExit:
-            print("⚠️ Local wheel incompatible with current Python version. Falling back to default installation...")
-            run_cmd([pip_exe, "install", "llama-cpp-python"], "Installing llama-cpp-python from pypi")
-    else:
-        run_cmd([pip_exe, "install", "llama-cpp-python"], "Installing llama-cpp-python")
+    # 3. Install llama-cpp-python with CUDA support
+    # We use a direct URL to a pre-compiled binary for Windows + CUDA 12.1
+    print("\n[Installing llama-cpp-python with CUDA support]")
+    wheel_url = "https://github.com/dougeeai/llama-cpp-python-wheels/releases/download/v0.3.16-cuda12.1-sm86-py312/llama_cpp_python-0.3.16+cuda12.1.sm86.ampere-cp312-cp312-win_amd64.whl"
+    run_cmd([pip_exe, "install", wheel_url], "Installing llama-cpp-python (pre-compiled wheel)")
 
     # 4. Install other requirements
     if os.path.exists("requirements.txt"):

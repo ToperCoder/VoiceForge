@@ -2,6 +2,10 @@ import sys
 import os
 import time
 from pathlib import Path
+import utils
+# Setup DLL paths before any other local imports that might depend on them
+utils.setup_cuda_path()
+
 import config
 import audio_extractor
 import transcriber
@@ -29,47 +33,8 @@ def get_files(target_path: str):
             
     return sorted(files)
 
-def setup_cuda_path():
-    """
-    Добавляет пути к DLL библиотекам NVIDIA (cublas, cudnn) в систему поиска Windows.
-    В Python 3.8+ на Windows простого добавления в PATH недостаточно, 
-    нужно использовать os.add_dll_directory.
-    """
-    venv_base = Path(sys.executable).parent.parent
-    site_packages = venv_base / "Lib" / "site-packages"
-    
-    # 1. Пути NVIDIA (cublas, cudnn)
-    nvidia_base = site_packages / "nvidia"
-    # 2. Путь самого CTranslate2 (там может быть cudnn64_9.dll)
-    ct2_base = site_packages / "ctranslate2"
-    
-    search_dirs = []
-    if nvidia_base.exists():
-        search_dirs.extend(list(nvidia_base.glob("**/bin")))
-    if ct2_base.exists():
-        search_dirs.append(ct2_base)
-    
-    added_count = 0
-    for bin_dir in search_dirs:
-        if bin_dir.is_dir():
-            path_str = str(bin_dir.resolve())
-            # Регистрируем в Windows DLL Loader
-            if hasattr(os, "add_dll_directory"):
-                try:
-                    os.add_dll_directory(path_str)
-                    added_count += 1
-                except Exception as e:
-                    pass # Игнорируем ошибки доступа
-            
-            # Дублируем в PATH для надежности
-            if path_str not in os.environ["PATH"]:
-                os.environ["PATH"] = path_str + os.pathsep + os.environ["PATH"]
-    
-    if added_count > 0:
-        print(f"DEBUG: Статическая регистрация DLL: {added_count} директорий.")
 
 def main():
-    setup_cuda_path()
     if len(sys.argv) < 2:
         print("Usage: python main.py <file.mp4 | folder/>")
         sys.exit(1)

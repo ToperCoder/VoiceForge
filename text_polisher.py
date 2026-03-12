@@ -1,16 +1,9 @@
 import gc
 import os
 import sys
-
-# Fix for llama-cpp-python CUDA DLL loading on Windows
-if os.name == 'nt':
-    venv_base = os.path.join(os.path.dirname(__file__), 'venv', 'Lib', 'site-packages', 'nvidia')
-    if os.path.exists(venv_base):
-        for root, dirs, files in os.walk(venv_base):
-            if 'bin' in dirs:
-                dll_path = os.path.join(root, 'bin')
-                print(f"Adding DLL directory: {dll_path}")
-                os.add_dll_directory(dll_path)
+import utils
+# Setup DLL paths BEFORE importing llama_cpp
+utils.setup_cuda_path()
 
 from llama_cpp import Llama
 import config
@@ -82,14 +75,7 @@ def polish_text(llm: Llama, text: str) -> str:
         result = response['choices'][0]['message']['content'].strip()
         
         # Очистка от возможных остатков промпта или шаблона
-        if "<think>" in result and "</think>" in result:
-            result = result.split("</think>")[-1].strip()
-        if "<|im_end|>" in result:
-            result = result.split("<|im_end|>")[0].strip()
-        if "assistant\n" in result:
-            result = result.split("assistant\n")[-1].strip()
-            
-        return result
+        return utils.clean_llm_output(result)
     except Exception as e:
         print(f"⚠️ Ошибка при полировке: {e}")
         return text
