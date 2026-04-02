@@ -4,7 +4,7 @@ import sys
 # Проверка, что скрипт запущен в виртуальном окружении
 if not (hasattr(sys, 'real_prefix') or (hasattr(sys, 'base_prefix') and sys.base_prefix != sys.prefix)):
     print("❌ ОШИБКА: Пожалуйста, активируйте виртуальное окружение:")
-    print("venv\\Scripts\\activate")
+    print("source venv/bin/activate")
     sys.exit(1)
 
 try:
@@ -31,7 +31,7 @@ def download_models():
             whisper_dir = snapshot_download(
                 repo_id=config.WHISPER_REPO_ID,
                 local_dir=config.WHISPER_MODEL,
-                local_dir_use_symlinks=False, # Важно для Windows
+                local_dir_use_symlinks=False,
                 resume_download=True
             )
             print(f"✅ Whisper успешно скачан/проверен в: {whisper_dir}")
@@ -56,7 +56,6 @@ def download_models():
                 repo_id="Qwen/Qwen2.5-3B-Instruct-GGUF",
                 filename=qwen_filename,
                 local_dir=models_dir,
-                local_dir_use_symlinks=False,
                 resume_download=True
             )
             print(f"✅ Qwen успешно скачан в: {qwen_path}")

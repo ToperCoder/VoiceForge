@@ -3,7 +3,7 @@ import os
 import time
 from pathlib import Path
 import utils
-# Setup DLL paths before any other local imports that might depend on them
+# Ensure CUDA lib path is set before loading downstream libraries
 utils.setup_cuda_path()
 
 import config

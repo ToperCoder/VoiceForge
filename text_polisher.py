@@ -1,45 +1,75 @@
 import gc
-import os
 import sys
+import time
+import subprocess
+import requests
 import utils
-# Setup DLL paths BEFORE importing llama_cpp
-utils.setup_cuda_path()
-
-from llama_cpp import Llama
 import config
 
-def load_qwen():
+
+def load_qwen() -> subprocess.Popen:
     """
-    Загружает модель Qwen через llama_cpp.
+    Запускает llama-server как подпроцесс и ждёт готовности.
     """
     if not config.QWEN_MODEL_PATH.exists():
-        print(f"❌ ОШИБКА: Файл не найден!")
+        print(f"❌ ОШИБКА: Файл модели не найден: {config.QWEN_MODEL_PATH}")
         sys.exit(1)
 
-        
+    if not config.LLAMA_SERVER_BIN.exists():
+        print(f"❌ ОШИБКА: llama-server не найден: {config.LLAMA_SERVER_BIN}")
+        print("Запустите setup_wsl.sh для сборки llama.cpp.")
+        sys.exit(1)
+
     n_gpu = -1 if config.USE_GPU else 0
-    
+
+    cmd = [
+        str(config.LLAMA_SERVER_BIN),
+        "--model", str(config.QWEN_MODEL_PATH),
+        "--ctx-size", "4096",
+        "--n-gpu-layers", str(n_gpu),
+        "--port", str(config.LLAMA_SERVER_PORT),
+        "--host", "127.0.0.1",
+    ]
+
     try:
-        # Загрузка модели (verbose=False для чистых логов)
-        llm = Llama(
-            model_path=config.QWEN_MODEL_PATH,
-            n_gpu_layers=n_gpu,
-            n_ctx=4096,
-            verbose=False
-        )
-        return llm
+        proc = subprocess.Popen(cmd, stdout=subprocess.DEVNULL, stderr=subprocess.PIPE)
     except Exception as e:
-        print(f"\n❌ ОШИБКА Llama: {e}")
-        print("Посмотрите логи выше для поиска 'unknown model architecture'")
+        print(f"\n❌ ОШИБКА запуска llama-server: {e}")
         sys.exit(1)
 
-def polish_text(llm: Llama, text: str) -> str:
+    health_url = f"http://127.0.0.1:{config.LLAMA_SERVER_PORT}/health"
+    for _ in range(60):
+        if proc.poll() is not None:
+            stderr_out = proc.stderr.read().decode(errors="replace").strip()
+            print(f"❌ ОШИБКА: llama-server завершился с кодом {proc.returncode}")
+            if stderr_out:
+                print("--- llama-server stderr ---")
+                print(stderr_out[-2000:])  # last 2000 chars is enough for diagnosis
+                print("---------------------------")
+            sys.exit(1)
+        try:
+            r = requests.get(health_url, timeout=2)
+            if r.status_code == 200:
+                return proc
+        except requests.ConnectionError:
+            pass
+        time.sleep(1)
+
+    proc.terminate()
+    print("❌ ОШИБКА: llama-server не запустился за 60 секунд.")
+    sys.exit(1)
+
+
+def polish_text(proc: subprocess.Popen, text: str) -> str:
     """
-    Полирует сохраненный текст, исправляя ошибки распознавания, используя Chat-режим Qwen.
+    Полирует текст через HTTP API llama-server (OpenAI-compatible).
     """
+    if len(text.strip()) < 5:
+        return text
+
     messages = [
         {
-            "role": "system", 
+            "role": "system",
             "content": (
                 "Sən Azərbaycan dili üzrə peşəkar redaktorsan. Tapşırığın: mətndəki nitq tanıma (ASR) səhvlərini düzəltməkdir.\n"
                 "MƏSULİYYƏT:\n"
@@ -55,41 +85,38 @@ def polish_text(llm: Llama, text: str) -> str:
         {"role": "user", "content": f"Aşağıdakı mətni peşəkar şəkildə redaktə et (heç nəyi silmə):\n\n{text}"}
     ]
 
-    # Если текст слишком короткий, полировка может только навредить или занять лишнее время
-    if len(text.strip()) < 5:
-        return text
-
-    # Уменьшаем max_tokens для скорости и предотвращения галлюцинаций
-    # Для полировки достаточно длины исходного текста + запас
-    max_tokens_polish = min(2048, len(text) * 2 + 100)
+    max_tokens = min(2048, len(text) * 2 + 100)
 
     try:
-        response = llm.create_chat_completion(
-            messages=messages,
-            max_tokens=max_tokens_polish,
-            temperature=0.1, # Немного повышаем с 0.0 для стабильности, но оставляем низким
-            top_p=0.9,
-            repeat_penalty=1.1
+        response = requests.post(
+            f"http://127.0.0.1:{config.LLAMA_SERVER_PORT}/v1/chat/completions",
+            json={
+                "messages": messages,
+                "max_tokens": max_tokens,
+                "temperature": 0.1,
+                "top_p": 0.9,
+                "repeat_penalty": 1.1,
+            },
+            timeout=120,
         )
-        
-        result = response['choices'][0]['message']['content'].strip()
-        
-        # Очистка от возможных остатков промпта или шаблона
+        response.raise_for_status()
+        result = response.json()["choices"][0]["message"]["content"].strip()
         return utils.clean_llm_output(result)
     except Exception as e:
         print(f"⚠️ Ошибка при полировке: {e}")
         return text
 
-def unload_qwen(llm):
+
+def unload_qwen(proc: subprocess.Popen):
     """
-    Полностью выгружает модель LLM из памяти.
+    Останавливает llama-server и освобождает ресурсы.
     """
-    print("\n[DEBUG] Освобождение памяти Qwen...")
-    if llm:
+    print("\n[DEBUG] Остановка llama-server...")
+    if proc and proc.poll() is None:
+        proc.terminate()
         try:
-            # llama-cpp-python автоматически освобождает память при удалении объекта
-            del llm
-        except:
-            pass
+            proc.wait(timeout=5)
+        except subprocess.TimeoutExpired:
+            proc.kill()
     gc.collect()
-    print("✅ Память Qwen очищена.\n")
+    print("✅ llama-server остановлен.\n")
