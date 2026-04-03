@@ -18,7 +18,7 @@ Azerbaijani speech-to-text pipeline. Transcribes audio/video files using Whisper
 
 ### 1. Download release assets
 
-From the [Releases page](https://github.com/toperus/VoiceForge/releases/latest), download:
+From the [Releases page](https://github.com/toperus/VoiceForge/releases), download:
 - `llama-server` → place in `bin/llama-server`
 - `Qwen-AzE.i1-Q6_K.gguf` → place in `models/Qwen-AzE.i1-Q6_K.gguf`
 

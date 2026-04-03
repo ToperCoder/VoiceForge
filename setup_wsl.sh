@@ -25,7 +25,7 @@ else
     echo "  CUDA runtime already installed."
 fi
 
-RELEASE_URL="https://github.com/toperus/VoiceForge/releases/latest"
+RELEASE_URL="https://github.com/toperus/VoiceForge/releases"
 
 # 3. Check pre-built llama-server
 echo "[3/5] Checking llama-server binary..."
