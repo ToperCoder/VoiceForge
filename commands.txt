@@ -1,5 +1,5 @@
 # Run these commands one by one in WSL Debian.
-# The first three sections can be run from anywhere.
+# The first two sections can be run from anywhere.
 # Before the Python section, cd into the project folder.
 
 
@@ -7,14 +7,12 @@
 
 sudo apt-get update
 
-sudo apt-get install -y gpgv python3-venv python3-pip ffmpeg build-essential cmake wget curl git gnupg ca-certificates ninja-build
-
-sudo apt-get remove -y --purge sqv
+sudo apt-get install -y python3-venv python3-pip ffmpeg wget curl gnupg ca-certificates
 
 
-# --- CUDA Toolkit 12.8 ---
+# --- CUDA 12 runtime libraries ---
 
-wget https://developer.download.nvidia.com/compute/cuda/repos/wsl-ubuntu/x86_64/cuda-keyring_1.1-1_all.deb
+wget https://developer.download.nvidia.com/compute/cuda/repos/debian13/x86_64/cuda-keyring_1.1-1_all.deb
 
 sudo dpkg -i cuda-keyring_1.1-1_all.deb
 
@@ -22,33 +20,12 @@ rm cuda-keyring_1.1-1_all.deb
 
 sudo apt-get update
 
-sudo apt-get install -y cuda-toolkit-12-8
-
-echo 'export PATH=/usr/local/cuda/bin:$PATH' >> ~/.bashrc
-
-echo 'export LD_LIBRARY_PATH=/usr/local/cuda/lib64:${LD_LIBRARY_PATH}' >> ~/.bashrc
-
-source ~/.bashrc
-
-
-# --- Build llama-server ---
-
-git clone --depth=1 https://github.com/ggerganov/llama.cpp /tmp/llama-cpp-build
-
-cmake -S /tmp/llama-cpp-build -B /tmp/llama-cpp-build/build -DGGML_CUDA=ON -DCMAKE_CUDA_ARCHITECTURES=120 -DCMAKE_BUILD_TYPE=Release -G Ninja
-
-cmake --build /tmp/llama-cpp-build/build --target llama-server -j$(nproc)
-
-mkdir -p ./bin
-
-cp /tmp/llama-cpp-build/build/bin/llama-server ./bin/llama-server
-
-rm -rf /tmp/llama-cpp-build
+sudo apt-get install -y libcublas12-cuda-12
 
 
 # --- Python environment ---
 
-cd ~/path/to/VoiceForge
+cd ~/VoiceForge
 
 python3 -m venv venv
 

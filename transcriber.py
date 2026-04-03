@@ -9,7 +9,7 @@ def load_whisper():
     device = "cuda" if config.USE_GPU else "cpu"
     
     model = WhisperModel(
-        config.WHISPER_MODEL, 
+        str(config.WHISPER_MODEL), 
         device=device, 
         compute_type=config.WHISPER_COMPUTE,
         local_files_only=True

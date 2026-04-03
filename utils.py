@@ -1,14 +1,18 @@
 import os
 
 def setup_cuda_path():
-    """
-    Ensures the system CUDA library directory is on LD_LIBRARY_PATH
-    so that faster-whisper/CTranslate2 can find CUDA libs at runtime.
-    """
-    cuda_lib = "/usr/local/cuda/lib64"
-    ld_path = os.environ.get("LD_LIBRARY_PATH", "")
-    if cuda_lib not in ld_path:
-        os.environ["LD_LIBRARY_PATH"] = cuda_lib + (":" + ld_path if ld_path else "")
+    candidates = [
+        "/usr/local/cuda/lib64",
+        "/usr/lib/x86_64-linux-gnu/libcublas/12",
+    ]
+    dirs = [p for p in candidates if os.path.isdir(p)]
+    if not dirs:
+        return
+    existing = [p for p in os.environ.get("LD_LIBRARY_PATH", "").split(":") if p]
+    for p in dirs:
+        if p not in existing:
+            existing.insert(0, p)
+    os.environ["LD_LIBRARY_PATH"] = ":".join(existing)
 
 def clean_llm_output(text: str) -> str:
     """
