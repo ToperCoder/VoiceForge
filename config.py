@@ -12,6 +12,9 @@ USE_GPU = True
 LLAMA_SERVER_BIN = Path(__file__).parent / "bin" / "llama-server"
 LLAMA_SERVER_PORT = 8080
 
+# libcublas.so.12 path for ctranslate2 and llama-server (Linux only)
+CUBLAS_LIB = "/usr/lib/x86_64-linux-gnu/libcublas/12/libcublas.so.12"
+
 # Directories for results
 RAW_TEXT_DIR = Path("raw_text")
 FINAL_TEXT_DIR = Path("final_text")

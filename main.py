@@ -1,7 +1,13 @@
 import sys
 import os
 import time
+import ctypes
 from pathlib import Path
+
+import config
+if os.path.exists(config.CUBLAS_LIB):
+    ctypes.CDLL(config.CUBLAS_LIB)
+
 import utils
 import config
 import audio_extractor
@@ -47,29 +53,29 @@ def main():
     config.FINAL_TEXT_DIR.mkdir(parents=True, exist_ok=True)
 
     
-    processed_files = [] # Список кортежей (имя_файла, имя_без_расширения)
+    processed_files = [] # list of tuples (filename, stem)
     
     # === STAGE 1: ASR ===
     print("\n" + "="*50)
-    print("▶ ЭТАП 1: ЗАГРУЗКА МОДЕЛИ WHISPER (РАСПОЗНАВАНИЕ)")
+    print("\u25b6 STAGE 1: LOADING WHISPER MODEL (TRANSCRIPTION)")
     print("="*50)
-    print("⏳ Инициализация (если запускается впервые, может начаться скачивание ~500 МБ)...")
+    print("⏳ Initializing...")
     t0 = time.time()
     whisper_model = transcriber.load_whisper()
-    print(f"✅ Whisper готов! (заняло {time.time()-t0:.1f} сек)")
+    print(f"✅ Whisper ready! ({time.time()-t0:.1f}s)")
     
     for f in files:
-        print(f"\n--- Обработка файла: {f.name} ---")
+        print(f"\n--- Processing file: {f.name} ---")
         temp_wav = f.with_name(f.stem + "_temp.wav")
         
-        print(f"⏳ Разделение аудио (ffmpeg)...")
+        print(f"⏳ Extracting audio (ffmpeg)...")
         audio_extractor.extract_audio(str(f), str(temp_wav))
         
-        print(f"⏳ Распознавание речи (это может занять время)...")
+        print(f"⏳ Transcribing speech (this may take a while)...")
         t0 = time.time()
         try:
             text = transcriber.transcribe_audio(whisper_model, str(temp_wav))
-            print(f"✅ Распознавание завершено (заняло {time.time()-t0:.1f} сек)")
+            print(f"✅ Transcription done ({time.time()-t0:.1f}s)")
             
             raw_path = Path(config.RAW_TEXT_DIR) / f"{f.stem}.txt"
             with open(raw_path, "w", encoding="utf-8") as out:
@@ -87,19 +93,18 @@ def main():
     
     # === STAGE 2: TEXT POLISHING ===
     if not processed_files:
-        print("Ни одного файла не было распознано.")
+        print("No files were transcribed.")
         return
-        
+
     print("\n" + "="*50)
-    print("▶ ЭТАП 2: ЗАГРУЗКА МОДЕЛИ QWEN (РЕДАКТИРОВАНИЕ)")
+    print("▶ STAGE 2: LOADING QWEN MODEL (EDITING)")
     print("="*50)
-    print("⏳ Подгружаем нейросеть-редактора в память...")
+    print("⏳ Loading editor model into memory...")
     t0 = time.time()
     qwen_model = text_polisher.load_qwen()
-    print(f"✅ Qwen готов! (заняло {time.time()-t0:.1f} сек)")
-    
+    print(f"✅ Qwen ready! ({time.time()-t0:.1f}s)")
     for original_name, stem in processed_files:
-        print(f"\n--- Полировка текста для: {original_name} ---")
+        print(f"\n--- Polishing text for: {original_name} ---")
         
         raw_path = Path(config.RAW_TEXT_DIR) / f"{stem}.txt"
         final_path = Path(config.FINAL_TEXT_DIR) / f"{stem}.txt"
@@ -107,7 +112,7 @@ def main():
         with open(raw_path, "r", encoding="utf-8") as inf:
             text = inf.read()
             
-        print(f"⏳ Идет редактура (модель Qwen анализирует текст)...")
+        print(f"⏳ Editing in progress (Qwen is analysing the text)...")
         t0 = time.time()
         if text.strip():
             polished = text_polisher.polish_text(qwen_model, text)
@@ -117,13 +122,13 @@ def main():
         with open(final_path, "w", encoding="utf-8") as outf:
             outf.write(polished)
             
-        print(f"✅ Редактура завершена (заняло {time.time()-t0:.1f} сек)")
+        print(f"✅ Editing done ({time.time()-t0:.1f}s)")
         
     text_polisher.unload_qwen(qwen_model)
     
     print("\n" + "="*50)
-    print("🎉 ВСЕ ЭТАПЫ УСПЕШНО ЗАВЕРШЕНЫ!")
-    print(f"Проверьте папки '{config.RAW_TEXT_DIR}' и '{config.FINAL_TEXT_DIR}'.")
+    print("🎉 ALL STAGES COMPLETED SUCCESSFULLY!")
+    print(f"Check folders '{config.RAW_TEXT_DIR}' and '{config.FINAL_TEXT_DIR}'.")
     print("="*50 + "\n")
 
 if __name__ == "__main__":

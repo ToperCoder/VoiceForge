@@ -1,77 +1,75 @@
 #!/bin/bash
 
-# VoiceForge Setup Script for Debian on WSL2
-# Target: RTX 50xx (Blackwell, SM120), CUDA 12, Debian 12 Bookworm
+# VoiceForge Setup Script for WSL2 (Ubuntu 22.04)
+# Pre-built llama-server included — no build step required.
 set -e
 
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 
-echo "--- VoiceForge Setup for Debian WSL2 (Blackwell/SM120) ---"
+echo "--- VoiceForge Setup for WSL2 ---"
 
 # 1. System dependencies
-echo "[1/5] Installing system dependencies..."
+echo "[1/4] Installing system dependencies..."
 sudo apt-get update
-# gpgv is used by apt for repo signature verification and tolerates NVIDIA's SHA1 key.
-# sqv (Sequoia PGP) is stricter and rejects SHA1 since the Feb 2026 policy change.
-sudo apt-get install -y python3-venv python3-pip ffmpeg build-essential cmake \
-    wget curl git gnupg ca-certificates ninja-build
+sudo apt-get install -y python3-venv python3-pip ffmpeg wget curl gnupg ca-certificates
 
-# 2. CUDA Toolkit 12 via apt (Debian 12 repo)
-echo "[2/5] Setting up CUDA Toolkit 12..."
-if ! command -v nvcc &> /dev/null; then
-    echo "  Adding NVIDIA CUDA repository for Debian 12..."
-    wget -q https://developer.download.nvidia.com/compute/cuda/repos/debian12/x86_64/cuda-keyring_1.1-1_all.deb
+# 2. CUDA runtime libraries
+echo "[2/4] Setting up CUDA runtime libraries..."
+if ! dpkg -l libcublas12-cuda-12 &>/dev/null; then
+    wget -q https://developer.download.nvidia.com/compute/cuda/repos/ubuntu2204/x86_64/cuda-keyring_1.1-1_all.deb
     sudo dpkg -i cuda-keyring_1.1-1_all.deb
     rm cuda-keyring_1.1-1_all.deb
     sudo apt-get update
-    sudo apt-get install -y cuda-toolkit-12-8
-    echo "  Appending CUDA path to ~/.bashrc..."
-    echo 'export PATH=/usr/local/cuda/bin:$PATH' >> ~/.bashrc
-    export PATH=/usr/local/cuda/bin:$PATH
+    sudo apt-get install -y libcublas12-cuda-12 cuda-cudart-12-8
 else
-    echo "  CUDA already detected: $(nvcc --version | head -1)"
+    echo "  CUDA runtime already installed."
 fi
 
-# 3. Build llama.cpp (llama-server) with CUDA SM120 support
-# SM120 = Blackwell (RTX 5080 / 5090). Compiling from source guarantees
-# the correct architecture flags are set.
-echo "[3/5] Building llama-server for SM120 (Blackwell)..."
-LLAMA_BUILD_DIR="/tmp/llama-cpp-build"
+RELEASE_URL="https://github.com/toperus/VoiceForge/releases/latest"
+
+# 3. Check pre-built llama-server
+echo "[3/5] Checking llama-server binary..."
 if [ ! -f "$SCRIPT_DIR/bin/llama-server" ]; then
-    rm -rf "$LLAMA_BUILD_DIR"
-    git clone --depth=1 https://github.com/ggerganov/llama.cpp "$LLAMA_BUILD_DIR"
-    cmake -S "$LLAMA_BUILD_DIR" -B "$LLAMA_BUILD_DIR/build" \
-        -DGGML_CUDA=ON \
-        -DCMAKE_CUDA_ARCHITECTURES=86 \
-        -DCMAKE_BUILD_TYPE=Release \
-        -G Ninja
-    cmake --build "$LLAMA_BUILD_DIR/build" --target llama-server -j$(nproc)
-    mkdir -p "$SCRIPT_DIR/bin"
-    cp "$LLAMA_BUILD_DIR/build/bin/llama-server" "$SCRIPT_DIR/bin/llama-server"
-    rm -rf "$LLAMA_BUILD_DIR"
-    echo "  llama-server installed to bin/llama-server"
-else
-    echo "  llama-server already present, skipping build."
+    echo ""
+    echo "ERROR: bin/llama-server not found."
+    echo "  Download it from: $RELEASE_URL"
+    echo "  Place it at: $SCRIPT_DIR/bin/llama-server"
+    echo ""
+    exit 1
 fi
+chmod +x "$SCRIPT_DIR/bin/llama-server"
+echo "  llama-server found."
 
-# 4. Python virtual environment
-echo "[4/5] Creating Python virtual environment..."
+# 4. Check model file
+echo "[4/5] Checking model file..."
+if [ ! -f "$SCRIPT_DIR/models/Qwen-AzE.i1-Q6_K.gguf" ]; then
+    echo ""
+    echo "ERROR: models/Qwen-AzE.i1-Q6_K.gguf not found."
+    echo "  Download it from: $RELEASE_URL"
+    echo "  Place it at: $SCRIPT_DIR/models/Qwen-AzE.i1-Q6_K.gguf"
+    echo ""
+    exit 1
+fi
+echo "  Model file found."
+
+# 5. Python virtual environment
+echo "[5/6] Creating Python virtual environment..."
 cd "$SCRIPT_DIR"
 python3 -m venv venv
 source venv/bin/activate
 pip install --upgrade pip
 pip install -r requirements.txt
 
-# 5. Prepare project directories
-echo "[5/5] Preparing directories..."
+# 6. Download Whisper model
+echo "[6/6] Downloading Whisper model (~500 MB)..."
+python3 download_whisper.py
+
+# Prepare project directories
 mkdir -p "$SCRIPT_DIR/models" "$SCRIPT_DIR/raw_text" "$SCRIPT_DIR/final_text"
 
 echo ""
 echo "--- Setup Complete ---"
-echo "IMPORTANT: The Windows NVIDIA driver must be recent enough for the 50xx card."
-echo "  It exposes CUDA to WSL2 automatically — no driver install needed inside Debian."
-echo ""
-echo "Place your model file at: models/Qwen-AzE.i1-Q6_K.gguf"
+echo "IMPORTANT: The Windows NVIDIA driver must be installed. No driver needed inside WSL."
 echo ""
 echo "To run VoiceForge:"
 echo "  source venv/bin/activate"

@@ -4,7 +4,7 @@ import config
 
 def load_whisper():
     """
-    Загружает модель Whisper.
+    Loads the Whisper model.
     """
     device = "cuda" if config.USE_GPU else "cpu"
     
@@ -18,7 +18,7 @@ def load_whisper():
 
 def transcribe_audio(model: WhisperModel, audio_path: str) -> str:
     """
-    Распознает речь из аудиофайла.
+    Transcribes speech from an audio file.
     """
     segments, info = model.transcribe(
         audio_path,
@@ -35,16 +35,15 @@ def transcribe_audio(model: WhisperModel, audio_path: str) -> str:
 
 def unload_whisper(model):
     """
-    Полностью выгружает модель Whisper из памяти.
+    Fully unloads the Whisper model from memory.
     """
-    print("\n[DEBUG] Освобождение памяти Whisper...")
+    print("\n[DEBUG] Releasing Whisper memory...")
     if model:
         try:
-            # Пытаемся удалить ссылки
+            # Remove references
             del model
         except:
             pass
     gc.collect()
-    # Если есть возможность очистить кэш CUDA (через ctypes или если установлен torch)
-    # Но так как мы работаем через C++ либы, gc.collect() должен дернуть деструкторы
-    print("✅ Память Whisper очищена.\n")
+    # gc.collect() should trigger C++ destructors since we use C++ libs
+    print("✅ Whisper memory cleared.\n")

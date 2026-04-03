@@ -1,4 +1,5 @@
 import gc
+import os
 import sys
 import time
 import subprocess
@@ -9,15 +10,15 @@ import config
 
 def load_qwen() -> subprocess.Popen:
     """
-    Запускает llama-server как подпроцесс и ждёт готовности.
+    Launches llama-server as a subprocess and waits for it to be ready.
     """
     if not config.QWEN_MODEL_PATH.exists():
-        print(f"❌ ОШИБКА: Файл модели не найден: {config.QWEN_MODEL_PATH}")
+        print(f"❌ ERROR: Model file not found: {config.QWEN_MODEL_PATH}")
         sys.exit(1)
 
     if not config.LLAMA_SERVER_BIN.exists():
-        print(f"❌ ОШИБКА: llama-server не найден: {config.LLAMA_SERVER_BIN}")
-        print("Запустите setup_wsl.sh для сборки llama.cpp.")
+        print(f"❌ ERROR: llama-server not found: {config.LLAMA_SERVER_BIN}")
+        print("Run setup_wsl.sh to set up the binary.")
         sys.exit(1)
 
     n_gpu = -1 if config.USE_GPU else 0
@@ -31,10 +32,14 @@ def load_qwen() -> subprocess.Popen:
         "--host", "127.0.0.1",
     ]
 
+    env = os.environ.copy()
+    if os.path.exists(config.CUBLAS_LIB):
+        env["LD_PRELOAD"] = config.CUBLAS_LIB
+
     try:
-        proc = subprocess.Popen(cmd, stdout=subprocess.DEVNULL, stderr=subprocess.PIPE)
+        proc = subprocess.Popen(cmd, stdout=subprocess.DEVNULL, stderr=subprocess.PIPE, env=env)
     except Exception as e:
-        print(f"\n❌ ОШИБКА запуска llama-server: {e}")
+        print(f"\n❌ ERROR launching llama-server: {e}")
         sys.exit(1)
 
     health_url = f"http://127.0.0.1:{config.LLAMA_SERVER_PORT}/health"
@@ -56,13 +61,13 @@ def load_qwen() -> subprocess.Popen:
         time.sleep(1)
 
     proc.terminate()
-    print("❌ ОШИБКА: llama-server не запустился за 60 секунд.")
+    print("❌ ERROR: llama-server did not start within 60 seconds.")
     sys.exit(1)
 
 
 def polish_text(proc: subprocess.Popen, text: str) -> str:
     """
-    Полирует текст через HTTP API llama-server (OpenAI-compatible).
+    Polishes text via the llama-server HTTP API (OpenAI-compatible).
     """
     if len(text.strip()) < 5:
         return text
@@ -103,15 +108,15 @@ def polish_text(proc: subprocess.Popen, text: str) -> str:
         result = response.json()["choices"][0]["message"]["content"].strip()
         return utils.clean_llm_output(result)
     except Exception as e:
-        print(f"⚠️ Ошибка при полировке: {e}")
+        print(f"⚠️ Error during polishing: {e}")
         return text
 
 
 def unload_qwen(proc: subprocess.Popen):
     """
-    Останавливает llama-server и освобождает ресурсы.
+    Stops llama-server and releases resources.
     """
-    print("\n[DEBUG] Остановка llama-server...")
+    print("\n[DEBUG] Stopping llama-server...")
     if proc and proc.poll() is None:
         proc.terminate()
         try:
@@ -119,4 +124,4 @@ def unload_qwen(proc: subprocess.Popen):
         except subprocess.TimeoutExpired:
             proc.kill()
     gc.collect()
-    print("✅ llama-server остановлен.\n")
+    print("✅ llama-server stopped.\n")

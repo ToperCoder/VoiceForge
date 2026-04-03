@@ -5,26 +5,21 @@ SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 
 # System dependencies
 sudo apt-get update
-sudo apt-get install -y python3-venv python3-pip ffmpeg build-essential cmake \
-    wget curl git gnupg ca-certificates ninja-build
+sudo apt-get install -y python3-venv python3-pip ffmpeg wget curl gnupg ca-certificates
 
-# CUDA Toolkit 12
-wget https://developer.download.nvidia.com/compute/cuda/repos/debian12/x86_64/cuda-keyring_1.1-1_all.deb
+# CUDA runtime libraries
+wget https://developer.download.nvidia.com/compute/cuda/repos/ubuntu2204/x86_64/cuda-keyring_1.1-1_all.deb
 sudo dpkg -i cuda-keyring_1.1-1_all.deb
 rm cuda-keyring_1.1-1_all.deb
 sudo apt-get update
-sudo apt-get install -y cuda-toolkit-12-8
-echo 'export PATH=/usr/local/cuda/bin:$PATH' >> ~/.bashrc
-export PATH=/usr/local/cuda/bin:$PATH
+sudo apt-get install -y libcublas12-cuda-12 cuda-cudart-12-8
 
-# Build llama-server
-git clone --depth=1 https://github.com/ggerganov/llama.cpp /tmp/llama-cpp-build
-cmake -S /tmp/llama-cpp-build -B /tmp/llama-cpp-build/build \
-    -DGGML_CUDA=ON -DCMAKE_CUDA_ARCHITECTURES=86 -DCMAKE_BUILD_TYPE=Release -G Ninja
-cmake --build /tmp/llama-cpp-build/build --target llama-server -j$(nproc)
-mkdir -p "$SCRIPT_DIR/bin"
-cp /tmp/llama-cpp-build/build/bin/llama-server "$SCRIPT_DIR/bin/llama-server"
-rm -rf /tmp/llama-cpp-build
+# Check pre-built llama-server
+if [ ! -f "$SCRIPT_DIR/bin/llama-server" ]; then
+    echo "ERROR: bin/llama-server not found." >&2
+    exit 1
+fi
+chmod +x "$SCRIPT_DIR/bin/llama-server"
 
 # Python environment
 cd "$SCRIPT_DIR"

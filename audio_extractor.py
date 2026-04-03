@@ -3,7 +3,7 @@ import imageio_ffmpeg
 
 def extract_audio(input_file: str, output_file: str):
     """
-    Извлекает аудио из видео или конвертирует аудио файл в формат:
+    Extracts audio from video or converts audio file to:
     - mono
     - 16kHz
     - wav
@@ -12,13 +12,13 @@ def extract_audio(input_file: str, output_file: str):
     ffmpeg_exe = imageio_ffmpeg.get_ffmpeg_exe()
     command = [
         ffmpeg_exe, 
-        "-y",               # Перезаписать файл если он существует
-        "-i", input_file,   # Входной файл
-        "-ac", "1",         # Одноканальный звук (mono)
-        "-ar", "16000",     # Частота дискретизации 16kHz
-        output_file         # Выходной файл
+        "-y",               # Overwrite output file if it exists
+        "-i", input_file,   # Input file
+        "-ac", "1",         # Mono audio
+        "-ar", "16000",     # 16kHz sample rate
+        output_file         # Output file
     ]
     
-    # Запускаем ffmpeg без вывода в консоль
+    # Run ffmpeg silently
     subprocess.run(command, stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL, check=True)
     return output_file
