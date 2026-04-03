@@ -3,9 +3,6 @@ import os
 import time
 from pathlib import Path
 import utils
-# Ensure CUDA lib path is set before loading downstream libraries
-utils.setup_cuda_path()
-
 import config
 import audio_extractor
 import transcriber
