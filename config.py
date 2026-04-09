@@ -3,9 +3,11 @@ from pathlib import Path
 WHISPER_REPO_ID = "deepdml/faster-whisper-large-v3-turbo-ct2"
 # Use Path for cross-platform directory handling
 WHISPER_MODEL = Path("models") / "models--faster-whisper-large-v3-turbo-ct2"
+
 WHISPER_COMPUTE = "float16" 
 LANGUAGE = "az"
-QWEN_MODEL_PATH = Path("models").resolve() / "Qwen-AzE.i1-Q6_K.gguf"
+# Use the latest Qwen3-4B-Instruct-2507 checkpoint
+QWEN_MODEL_PATH = Path("models").resolve() / "Qwen3-4B-Instruct-2507-Q4_K_M.gguf"
 USE_GPU = True
 
 # llama-server binary (built by setup_wsl.sh)
