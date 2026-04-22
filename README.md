@@ -18,17 +18,24 @@ Azerbaijani speech-to-text pipeline. Transcribes audio/video files using Whisper
 
 ### 1. Download release assets
 
+
 From the [Releases page](https://github.com/ToperCoder/VoiceForge/releases), download:
 - `llama-server` → place in `bin/llama-server`
-- `Qwen-AzE.i1-Q6_K.gguf` → place in `models/Qwen-AzE.i1-Q6_K.gguf`
+- `Qwen3-4B-Instruct-2507-Q4_K_M.gguf` → place in `models/Qwen3-4B-Instruct-2507-Q4_K_M.gguf`
 
-### 2. Run setup script
 
-```bash
-bash setup_wsl.sh
-```
+### 2. Install dependencies
 
-This installs system dependencies, CUDA runtime libraries, sets up the Python virtual environment, and downloads the Whisper model automatically.
+- Create and activate a Python virtual environment:
+  ```bash
+  python3 -m venv venv
+  source venv/bin/activate
+  ```
+- Install Python requirements:
+  ```bash
+  pip install -r requirements.txt
+  ```
+- Download Whisper model (see `models/` for structure)
 
 ## Usage
 
@@ -50,8 +57,8 @@ Supported formats: `.mp4`, `.mkv`, `.avi`, `.mov`, `.mp3`, `.wav`, `.flac`, `.m4
 bin/
   llama-server          # Pre-built binary (download from Releases)
 models/
-  Qwen-AzE.i1-Q6_K.gguf                        # Qwen GGUF model (download from Releases)
-  models--faster-whisper-large-v3-turbo-ct2/    # Whisper model (download_whisper.py)
+  Qwen3-4B-Instruct-2507-Q4_K_M.gguf           # Qwen GGUF model (download from Releases)
+  models--azerbaijani-whisper-small-ct2/       # Whisper model
 raw_text/               # Raw ASR transcripts
 final_text/             # Corrected transcripts
 ```

@@ -2,7 +2,7 @@ from pathlib import Path
 
 WHISPER_REPO_ID = "deepdml/faster-whisper-large-v3-turbo-ct2"
 # Use Path for cross-platform directory handling
-WHISPER_MODEL = Path("models") / "models--faster-whisper-large-v3-turbo-ct2"
+WHISPER_MODEL = Path("models") / "azerbaijani-whisper-small-ct2"
 
 WHISPER_COMPUTE = "float16" 
 LANGUAGE = "az"
