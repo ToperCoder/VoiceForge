@@ -14,12 +14,8 @@ rm cuda-keyring_1.1-1_all.deb
 sudo apt-get update
 sudo apt-get install -y libcublas12-cuda-12 cuda-cudart-12-8
 
-# Check pre-built llama-server
-if [ ! -f "$SCRIPT_DIR/bin/llama-server" ]; then
-    echo "ERROR: bin/llama-server not found." >&2
-    exit 1
-fi
-chmod +x "$SCRIPT_DIR/bin/llama-server"
+# Check Ollama instead (Optional but helpful)
+# We assume Ollama is installed on the host.
 
 # Python environment
 cd "$SCRIPT_DIR"

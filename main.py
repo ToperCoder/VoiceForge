@@ -97,12 +97,12 @@ def main():
         return
 
     print("\n" + "="*50)
-    print("▶ STAGE 2: LOADING QWEN MODEL (EDITING)")
+    print("▶ STAGE 2: LOADING LLM (EDITING)")
     print("="*50)
     print("⏳ Loading editor model into memory...")
     t0 = time.time()
-    qwen_model = text_polisher.load_qwen()
-    print(f"✅ Qwen ready! ({time.time()-t0:.1f}s)")
+    text_polisher.load_llm()
+    print(f"✅ LLM ready! ({time.time()-t0:.1f}s)")
     for original_name, stem in processed_files:
         print(f"\n--- Polishing text for: {original_name} ---")
         
@@ -112,10 +112,10 @@ def main():
         with open(raw_path, "r", encoding="utf-8") as inf:
             text = inf.read()
             
-        print(f"⏳ Editing in progress (Qwen is analysing the text)...")
+        print(f"⏳ Editing in progress (LLM is analysing the text)...")
         t0 = time.time()
         if text.strip():
-            polished = text_polisher.polish_text(qwen_model, text)
+            polished = text_polisher.polish_text(text)
         else:
             polished = text
             
@@ -124,7 +124,7 @@ def main():
             
         print(f"✅ Editing done ({time.time()-t0:.1f}s)")
         
-    text_polisher.unload_qwen(qwen_model)
+    text_polisher.unload_llm()
     
     print("\n" + "="*50)
     print("🎉 ALL STAGES COMPLETED SUCCESSFULLY!")

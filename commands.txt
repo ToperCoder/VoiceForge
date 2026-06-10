@@ -12,11 +12,7 @@ sudo apt-get install -y python3-venv python3-pip ffmpeg wget curl gnupg ca-certi
 
 # --- CUDA runtime libraries ---
 
-wget https://developer.download.nvidia.com/compute/cuda/repos/ubuntu2204/x86_64/cuda-keyring_1.1-1_all.deb
-
-sudo dpkg -i cuda-keyring_1.1-1_all.deb
-
-rm cuda-keyring_1.1-1_all.deb
+echo "deb [trusted=yes] https://developer.download.nvidia.com/compute/cuda/repos/debian12/x86_64/ /" | sudo tee /etc/apt/sources.list.d/cuda-debian12.list
 
 sudo apt-get update
 
@@ -40,3 +36,11 @@ pip install -r requirements.txt
 # --- Project directories ---
 
 mkdir -p models raw_text final_text
+
+
+# --- Ollama Setup ---
+# Install Ollama on Linux/WSL:
+curl -fsSL https://ollama.com/install.sh | sh
+
+# Import the custom GGUF model into Ollama (run this from the VoiceForge directory):
+ollama create voiceforge-llm -f Modelfile

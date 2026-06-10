@@ -6,15 +6,13 @@ WHISPER_MODEL = Path("models") / "azerbaijani-whisper-small-ct2"
 
 WHISPER_COMPUTE = "float16" 
 LANGUAGE = "az"
-# Use the latest Qwen3-4B-Instruct-2507 checkpoint
-QWEN_MODEL_PATH = Path("models").resolve() / "Qwen3-4B-Instruct-2507-Q4_K_M.gguf"
 USE_GPU = True
 
-# llama-server binary (built by setup_wsl.sh)
-LLAMA_SERVER_BIN = Path(__file__).parent / "bin" / "llama-server"
-LLAMA_SERVER_PORT = 8080
+# Ollama settings
+OLLAMA_API_URL = "http://127.0.0.1:11434"
+OLLAMA_MODEL_NAME = "voiceforge-llm"
 
-# libcublas.so.12 path for ctranslate2 and llama-server (Linux only)
+# libcublas.so.12 path for ctranslate2 (Linux only)
 CUBLAS_LIB = "/usr/lib/x86_64-linux-gnu/libcublas/12/libcublas.so.12"
 
 # Directories for results

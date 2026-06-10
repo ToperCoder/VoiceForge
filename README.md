@@ -5,7 +5,7 @@ Azerbaijani speech-to-text pipeline. Transcribes audio/video files using Whisper
 ## How it works
 
 1. **Stage 1 — Transcription**: Extracts audio with ffmpeg, transcribes with `faster-whisper-large-v3-turbo`
-2. **Stage 2 — Editing**: Sends raw transcript to a local `llama-server` (Qwen model) to fix ASR errors
+2. **Stage 2 — Editing**: Sends raw transcript to a local **Ollama** service (Qwen model) to fix ASR errors
 3. Results are saved to `raw_text/` (raw transcript) and `final_text/` (corrected)
 
 ## Requirements
@@ -20,9 +20,13 @@ Azerbaijani speech-to-text pipeline. Transcribes audio/video files using Whisper
 
 
 From the [Releases page](https://github.com/ToperCoder/VoiceForge/releases), download:
-- `llama-server` → place in `bin/llama-server`
 - `Qwen3-4B-Instruct-2507-Q4_K_M.gguf` → place in `models/Qwen3-4B-Instruct-2507-Q4_K_M.gguf`
 
+Also, make sure you have **Ollama** installed on your system (from [ollama.com](https://ollama.com)).
+Import the downloaded GGUF model into Ollama by running the following command in the project root:
+```bash
+ollama create voiceforge-llm -f Modelfile
+```
 
 ### 2. Install dependencies
 
@@ -54,8 +58,6 @@ Supported formats: `.mp4`, `.mkv`, `.avi`, `.mov`, `.mp3`, `.wav`, `.flac`, `.m4
 ## Project structure
 
 ```
-bin/
-  llama-server          # Pre-built binary (download from Releases)
 models/
   Qwen3-4B-Instruct-2507-Q4_K_M.gguf           # Qwen GGUF model (download from Releases)
   models--azerbaijani-whisper-small-ct2/       # Whisper model
