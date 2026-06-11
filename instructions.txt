@@ -44,3 +44,12 @@ curl -fsSL https://ollama.com/install.sh | sh
 
 # Import the custom GGUF model into Ollama (run this from the VoiceForge directory):
 ollama create voiceforge-llm -f Modelfile
+
+
+# --- Usage ---
+
+# 1. Process a single audio/video file:
+python3 main.py Recording.m4a
+
+# 2. Process an entire folder of files:
+python3 main.py /path/to/folder/

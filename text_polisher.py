@@ -44,6 +44,13 @@ def load_llm():
     try:
         response = requests.get(f"{config.OLLAMA_API_URL}/api/tags", timeout=2)
         if response.status_code == 200:
+            models = response.json().get("models", [])
+            model_names = [m["name"] for m in models]
+            # Model names might have tags like :latest, so split by ':' and match exactly
+            if not any(m.split(':')[0] == config.OLLAMA_MODEL_NAME for m in model_names):
+                print(f"❌ ERROR: Model '{config.OLLAMA_MODEL_NAME}' not found in Ollama.")
+                print(f"   Please run: ollama create {config.OLLAMA_MODEL_NAME} -f Modelfile")
+                sys.exit(1)
             return True
         else:
             print(f"❌ ERROR: Ollama returned status code {response.status_code}")
